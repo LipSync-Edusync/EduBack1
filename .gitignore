@@ -1,0 +1,106 @@
+*.jpg
+*.mp4
+*.pyc
+*.bin
+*.avi
+*.wav
+filelists/*.txt
+evaluation/test_filelists/lr*.txt
+*.mkv
+*.gif
+*.webm
+*.mp3
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.lz
+*.tar.lzo
+*.tar.lzma
+*.tar.zst
+*.tar.lzop
+*.tar.lz4
+*.tar.lz4c
+*.tar.lzop2
+*.tar.lzop3
+*.tar.lzop4
+*.tar.lzop5
+
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variable files
+*.env
+.env.*
+
+# Flask / Gunicorn
+instance/
+*.log
+*.pid
+
+# Jupyter notebooks
+.ipynb_checkpoints
+
+# PyInstaller
+*.spec
+dist/
+build/
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# VSCode settings
+.vscode/
+
+# Python test / coverage
+coverage/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# SQLite database files
+*.db
+*.sqlite3
+
+# Uploads, results, processed files, transcriptions
+upload/
+processed/
+results/
+transcriptions/
+
+# Model checkpoints, weights, artifacts
+*.h5
+*.pth
+*.pt
+*.ckpt
+*.joblib
+*.pkl
+
+# Other tools and misc
+__pypackages__/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+.cache/
+
