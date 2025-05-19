@@ -56,8 +56,8 @@ app.config['MYSQL_DB'] = 'lipsync'
 # app.config['MYSQL_DB'] = 'lipsync'
 
 VIDEO_DIRECTORY = '/home/oem/EDUSYNC/edu_back/edu_back/processed/'
-backendURL = "http://192.168.0.128:5001"
-backendHost = "192.168.0.128"
+backendURL = "http://0.0.0.0:5001"
+backendHost = '0.0.0.0'
 
 @app.route('/check-file', methods=['GET'])
 def check_file():
