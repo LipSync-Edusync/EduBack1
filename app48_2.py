@@ -23,6 +23,9 @@ from moviepy.tools import subprocess_call
 import ffmpeg
 from pydub import AudioSegment
 import numpy as np
+import simpleaudio as sa
+import pyttsx3
+import threading
 
 
 import locale
@@ -119,7 +122,7 @@ def translate_text_file(input_text, dest_language, src_lang):
         print(f"An error occurred: {e}")
     return "", ""
 
-def text_to_speech_from_text(text, lang='bn', amplitude_change=0, pitch_change=0):
+def text_to_speech_from_text(text, lang='bn', amplitude_change=10, pitch_change=-10):
     tts = gTTS(text=text, lang=lang)
     temp_audio_path = os.path.join(PROCESSED_FOLDER, "temp_output.mp3")
     tts.save(temp_audio_path)
@@ -135,6 +138,84 @@ def text_to_speech_from_text(text, lang='bn', amplitude_change=0, pitch_change=0
     output_file_path = os.path.join(PROCESSED_FOLDER, "translated_output.mp3")
     audio.export(output_file_path, format="mp3")
     return output_file_path
+
+# def text_to_speech_from_text(text, lang="bn", amplitude_change=0, pitch_change=0):
+#     # 1. Generate MP3 file via gTTS
+#     temp_mp3 = os.path.join(PROCESSED_FOLDER, "temp_output.mp3")
+#     tts = gTTS(text=text, lang=lang)
+#     tts.save(temp_mp3)
+
+#     # 2. Load into AudioSegment
+#     audio = AudioSegment.from_file(temp_mp3, format="mp3")
+#     audio = audio + amplitude_change  # volume adjust
+
+#     if pitch_change != 0:
+#         new_rate = int(audio.frame_rate * (2.0 ** (pitch_change / 12.0)))
+#         audio = audio._spawn(audio.raw_data, overrides={"frame_rate": new_rate})
+#         audio = audio.set_frame_rate(44100)
+
+#     # 3. Export to WAV (simpleaudio handles WAV best)
+#     wav_path = os.path.join(PROCESSED_FOLDER, "temp.wav")
+#     audio.export(wav_path, format="wav")
+
+#     # 4. Play WAV via simpleaudio (non-blocking)
+#     wave_obj = sa.WaveObject.from_wave_file(wav_path)
+#     play_obj = wave_obj.play()
+#     return wav_path
+
+# def text_to_speech_from_text(text, lang=None, amplitude_change=0, pitch_change=0):
+#     engine = pyttsx3.init()
+
+#     # Select first male voice available
+#     voices = engine.getProperty('voices')
+#     male = next((v for v in voices if v.gender == 'male'), None)
+#     if male:
+#         engine.setProperty('voice', male.id)
+#     # else fall back to default
+
+#     temp_mp3 = os.path.join(PROCESSED_FOLDER, "temp_output.mp3")
+#     engine.save_to_file(text, temp_mp3)
+#     engine.runAndWait()
+
+#     audio = AudioSegment.from_file(temp_mp3)
+#     audio = audio + amplitude_change
+
+#     if pitch_change != 0:
+#         new_rate = int(audio.frame_rate * (2.0 ** (pitch_change / 12.0)))
+#         audio = audio._spawn(audio.raw_data, overrides={'frame_rate': new_rate})
+#         audio = audio.set_frame_rate(44100)
+
+#     output_file_path = os.path.join(PROCESSED_FOLDER, "translated_output.mp3")
+#     audio.export(output_file_path, format="mp3")
+#     return output_file_path
+
+# def text_to_speech_from_text(text, voice_gender='male', amplitude_change=0, pitch_change=0):
+#     engine = pyttsx3.init()
+#     voices = engine.getProperty('voices')
+#     # pick the first voice whose name/id suggests male
+#     male_voice = next((v for v in voices if 'male' in v.name.lower() or 'male' in v.id.lower()), None)
+#     if male_voice:
+#         engine.setProperty('voice', male_voice.id)
+#     # you can also tune rate and volume:
+#     # engine.setProperty('rate', 150)
+#     # engine.setProperty('volume', 0.9)
+#     print("Setting voice==========")
+#     temp_path = os.path.join(PROCESSED_FOLDER, "temp_output.mp3")
+#     engine.save_to_file(text, temp_path)
+#     engine.runAndWait()
+#     print("Voice set and saved to temp_output.mp3")
+#     # now post-process with pydub
+#     audio = AudioSegment.from_file(temp_path)
+#     audio = audio + amplitude_change
+#     print("Amplitude changed")
+#     if pitch_change != 0:
+#         new_rate = int(audio.frame_rate * (2.0 ** (pitch_change / 12.0)))
+#         audio = audio._spawn(audio.raw_data, overrides={'frame_rate': new_rate})
+#         audio = audio.set_frame_rate(44100)
+#     print("Pitch changed")
+#     out_path = os.path.join(PROCESSED_FOLDER, "translated_output.mp3")
+#     audio.export(out_path, format="mp3")
+#     return out_path
 
 def remove_audio(input_video):
     input_stream = ffmpeg.input(input_video)
