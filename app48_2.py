@@ -7,7 +7,7 @@ import speech_recognition as sr
 import ffmpeg
 # from googletrans import Translator
 from gtts import gTTS
-from pydub import AudioSegment, silence
+from pydub import AudioSegment, silence, effects
 from flask_cors import CORS
 import mysql.connector
 import face_recognition
@@ -21,11 +21,11 @@ import face_recognition
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from moviepy.tools import subprocess_call
 import ffmpeg
-from pydub import AudioSegment
 import numpy as np
 import simpleaudio as sa
 import pyttsx3
 import threading
+from tempfile import NamedTemporaryFile
 
 
 import locale
@@ -122,22 +122,115 @@ def translate_text_file(input_text, dest_language, src_lang):
         print(f"An error occurred: {e}")
     return "", ""
 
-def text_to_speech_from_text(text, lang='bn', amplitude_change=10, pitch_change=-10):
-    tts = gTTS(text=text, lang=lang)
-    temp_audio_path = os.path.join(PROCESSED_FOLDER, "temp_output.mp3")
+# def text_to_speech_from_text(text, lang='bn', amplitude_change=10, pitch_change=-10):
+#     tts = gTTS(text=text, lang=lang)
+#     temp_audio_path = os.path.join(PROCESSED_FOLDER, "temp_output.mp3")
+#     tts.save(temp_audio_path)
+
+#     audio = AudioSegment.from_file(temp_audio_path)
+#     audio = audio + amplitude_change
+
+#     if pitch_change != 0:
+#         new_sample_rate = int(audio.frame_rate * (2.0 ** (pitch_change / 12.0)))
+#         audio = audio._spawn(audio.raw_data, overrides={'frame_rate': new_sample_rate})
+#         audio = audio.set_frame_rate(44100)
+
+#     output_file_path = os.path.join(PROCESSED_FOLDER, "translated_output.mp3")
+#     audio.export(output_file_path, format="mp3")
+#     return output_file_path
+
+def text_to_speech_from_text(
+    text,
+    lang='bn',
+    amplitude_change=8,          # Reduced for safer amplification
+    pitch_change=-15,            # Lower pitch for male voice
+    slow_speed=False,            # Control speaking speed
+    tld='co.in',                # Use Indian domain for male voice
+    eq_boost_low=150            # Boost low frequencies (Hz)
+):
+    # Generate initial speech with domain likely to have male voice
+    tts = gTTS(text=text, lang=lang, slow=slow_speed, tld=tld)
+    
+    temp_audio_path = os.path.join("processed", "temp_output.mp3")
+    os.makedirs(os.path.dirname(temp_audio_path), exist_ok=True)
     tts.save(temp_audio_path)
 
+    # Load and process audio
     audio = AudioSegment.from_file(temp_audio_path)
+    
+    # Apply volume boost
     audio = audio + amplitude_change
-
+    
+    # Pitch shifting with formant preservation
     if pitch_change != 0:
         new_sample_rate = int(audio.frame_rate * (2.0 ** (pitch_change / 12.0)))
         audio = audio._spawn(audio.raw_data, overrides={'frame_rate': new_sample_rate})
         audio = audio.set_frame_rate(44100)
-
-    output_file_path = os.path.join(PROCESSED_FOLDER, "translated_output.mp3")
-    audio.export(output_file_path, format="mp3")
+    
+    # Apply low-frequency EQ boost
+    if eq_boost_low:
+        audio = audio.low_pass_filter(eq_boost_low) + 2
+    
+    # Normalize volume to prevent clipping
+    audio = effects.normalize(audio)
+    
+    output_file_path = os.path.join("processed", "translated_output.mp3")
+    audio.export(output_file_path, format="mp3", bitrate="192k")
+    
+    # Clean temporary file
+    if os.path.exists(temp_audio_path):
+        os.remove(temp_audio_path)
+        
     return output_file_path
+
+# def text_to_speech_from_text(text, lang='bn', amplitude_change=0, pitch_change=0, male_voice=True, speech_rate=170):
+#     engine = pyttsx3.init()
+    
+#     voices = engine.getProperty('voices')
+    
+#     if male_voice:
+#         male_voice_found = False
+#         male_keywords = ['male', 'david', 'mark', 'alex', 'bruce', 'fred', 'thomas', 'richard']
+        
+#         for voice in voices:
+#             if any(keyword in voice.name.lower() for keyword in male_keywords):
+#                 engine.setProperty('voice', voice.id)
+#                 male_voice_found = True
+#                 print(f"Using male voice: {voice.name}")
+#                 break
+        
+#         if not male_voice_found:
+#             print("No specific male voice found - using default voice")
+#             engine.setProperty('voice', voices[0].id)
+#     else:
+#         for voice in voices:
+#             if any(keyword in voice.name.lower() for keyword in ['female', 'karen', 'samantha', 'zira', 'victoria']):
+#                 engine.setProperty('voice', voice.id)
+#                 break
+    
+#     engine.setProperty('rate', speech_rate)  # 170 WPM
+#     engine.setProperty('volume', 0.95)
+    
+#     try:
+#         engine.setProperty('pitch', 0.80 if male_voice else 1.05)
+#     except:
+#         print("Pitch adjustment not supported on this system")
+        
+#     with NamedTemporaryFile(delete=False, suffix=".wav") as temp_wav_file:
+#         temp_wav_path = temp_wav_file.name
+
+#     print("======================")
+#     engine.save_to_file(text, temp_wav_path)
+#     engine.runAndWait()
+#     print("======================")
+
+#     output_file_path = os.path.join(PROCESSED_FOLDER, "translated_output.mp3")
+#     audio = AudioSegment.from_file(temp_wav_path, format="wav")
+#     audio.export(output_file_path, format="mp3")
+
+#     os.remove(temp_wav_path)
+    
+#     return output_file_path
 
 # def text_to_speech_from_text(text, lang="bn", amplitude_change=0, pitch_change=0):
 #     # 1. Generate MP3 file via gTTS
